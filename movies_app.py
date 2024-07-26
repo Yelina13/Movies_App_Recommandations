@@ -1,10 +1,10 @@
 # Importation des bibliothèques nécessaires
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import streamlit as st
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import NearestNeighbors
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# import streamlit as st
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.neighbors import NearestNeighbors
 
 # Chargement des données dans un DataFrame Pandas
 df = pd.read_csv("data.csv")  # Remplacez par le chemin de votre fichier
