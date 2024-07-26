@@ -7,12 +7,12 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 
 # Fonction pour charger les données de recommandation
-@st.cache_data
+@st.cache
 def load_recommendation_data():
     return pd.read_csv("data.csv")  # Remplacez par le chemin de votre fichier
 
 # Fonction pour charger les données d'analyse des acteurs
-@st.cache_data
+@st.cache
 def load_analysis_data():
     return pd.read_csv('movies_france_2000.csv', low_memory=False)
 
