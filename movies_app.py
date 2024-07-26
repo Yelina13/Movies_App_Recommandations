@@ -1,4 +1,3 @@
-
 # Importation des bibliothèques nécessaires
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,11 +6,11 @@ import streamlit as st
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 
-# Application Streamlit
+# Fonction principale de l'application Streamlit
 def main():
     st.title("Système de recommandation de films")
 
-    # Chargement des données dans un DataFrame Pandas
+    # Chargement des données de films pour les recommandations
     @st.cache_data
     def load_data():
         return pd.read_csv("data.csv")  # Remplacez par le chemin de votre fichier
@@ -54,7 +53,7 @@ def main():
         else:
             st.write("Aucune recommandation trouvée pour ce film.")
 
-    # Analyse des acteurs et réalisateurs
+    # Chargement des données pour l'analyse des acteurs et réalisateurs
     @st.cache_data
     def load_analysis_data():
         return pd.read_csv('movies_france_2000.csv', low_memory=False)
