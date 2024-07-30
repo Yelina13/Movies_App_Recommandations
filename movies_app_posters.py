@@ -67,9 +67,17 @@ def main():
     # Nettoyage des données
     X = X.apply(pd.to_numeric, errors='coerce')
     X.replace([float('inf'), -float('inf')], pd.NA, inplace=True)
-    X.fillna(X.mean(), inplace=True)
 
-    # Debug: Vérifier les NaN dans les données après nettoyage
+    # Débogage : Afficher les colonnes avec des NaN restants
+    nan_columns = X.columns[X.isna().any()].tolist()
+    if nan_columns:
+        st.write("Colonnes contenant encore des valeurs NaN après nettoyage :")
+        st.write(X[nan_columns].isna().sum())
+    
+    # Méthodes de remplacement des NaN
+    X.fillna(X.median(), inplace=True)  # Utilisation de la médiane au lieu de la moyenne pour moins de biais
+
+    # Vérifiez de nouveau s'il y a des NaN
     if X.isna().sum().sum() > 0:
         st.error(f"Erreur : Les données contiennent encore des valeurs NaN après nettoyage. Valeurs NaN restantes : {X.isna().sum().sum()}")
         return
