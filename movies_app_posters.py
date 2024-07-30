@@ -11,7 +11,7 @@ from sklearn.neighbors import NearestNeighbors
 def load_recommendation_data():
     """Charger le jeu de données pour les recommandations de films."""
     try:
-        return pd.read_csv("data.csv")  # Remplacez par le chemin vers votre fichier
+        return pd.read_csv("data1.csv")  # Remplacez par le chemin vers votre fichier
     except FileNotFoundError:
         st.error("Erreur : Le fichier data.csv est introuvable.")
         return pd.DataFrame()
