@@ -28,7 +28,7 @@ def recommend_movies(movie_title, df, knn_model, X_scaled):
         return recommendations
     except IndexError:
         # Retourne une DataFrame vide si le film n'est pas trouvé dans le DataFrame
-        return pd.DataFrame(columns=['title', 'poster_url'])
+        return pd.DataFrame(columns=['title', 'poster_path'])
 
 # Application Streamlit
 def main():
@@ -57,7 +57,7 @@ def main():
             st.write("Recommandations pour le film ", movie_title, ":")
             for _, row in recommendations.iterrows():
                 st.write(row['title'])
-                st.image(row['poster_url'], width=150)  # Affiche l'affiche du film
+                st.image(row['poster_path'], width=150)  # Affiche l'affiche du film
         else:
             st.write("Aucune recommandation trouvée pour ce film.")
             
