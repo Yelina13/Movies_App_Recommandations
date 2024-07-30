@@ -28,6 +28,15 @@ def load_analysis_data():
         st.error("Erreur : Le fichier movies_france_2000.csv est introuvable. Vérifiez le chemin ou le nom du fichier.")
         return pd.DataFrame()
 
+# Fonction pour obtenir l'URL de l'affiche du film
+def get_poster_path(movie_id, df):
+    """Retourner l'URL de l'affiche du film basé sur l'ID du film."""
+    poster_path = df[df['title'] == movie_id]['poster_path'].values
+    if len(poster_path) > 0 and pd.notna(poster_path[0]):
+        return "https://image.tmdb.org/t/p/original/" + poster_path[0].lstrip('/')
+    else:
+        return "https://via.placeholder.com/300x450"
+
 # Fonction de recommandation de films
 def recommend_movies(movie_title, df, knn_model, X_scaled):
     """Recommander des films basés sur le titre d'un film donné."""
@@ -37,11 +46,8 @@ def recommend_movies(movie_title, df, knn_model, X_scaled):
         recommended_movies_index = indices[0][1:]
         recommendations = df.iloc[recommended_movies_index][['title', 'poster_path']]
         
-        # Formatage des URLs des affiches
-        base_url = "https://image.tmdb.org/t/p/original/"
-        recommendations['poster_urls'] = recommendations['poster_path'].apply(
-            lambda path: base_url + path.lstrip('/') if path else "https://via.placeholder.com/300x450"
-        )
+        # Formatage des URLs des affiches en utilisant la fonction get_poster_path
+        recommendations['poster_urls'] = recommendations['title'].apply(lambda title: get_poster_path(title, df))
         
         return recommendations
     except (IndexError, KeyError):
