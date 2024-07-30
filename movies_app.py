@@ -1,66 +1,105 @@
-# Importation des bibliothèques nécessaires
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+# Import necessary libraries
 import streamlit as st
+import pandas as pd
+import seaborn as sns
+import matplotlib as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 
-# Fonction pour charger les données de recommandation
-@st.cache
+# Function to load recommendation data
+@st.cache_data
 def load_recommendation_data():
-    return pd.read_csv("data.csv")  # Remplacez par le chemin de votre fichier
-
-# Fonction pour charger les données d'analyse des acteurs
-@st.cache
-def load_analysis_data():
-    return pd.read_csv('movies_france_2000.csv', low_memory=False)
-
-# Fonction de recommandation
-def recommend_movies(movie_title, df, knn_model, X_scaled):
+    """Load the dataset for movie recommendations."""
     try:
+        return pd.read_csv("data.csv")  # Replace with the path to your file
+    except FileNotFoundError:
+        st.error("Erreur: Le fichier data.csv est introuvable.")
+        return pd.DataFrame()
+
+# Function to load actor analysis data
+@st.cache_data
+def load_analysis_data():
+    """Load the dataset for actor analysis."""
+    try:
+        return pd.read_csv('movies_france_2000.csv', low_memory=False)
+    except FileNotFoundError:
+        st.error("Erreur: Le fichier movies_france_2000.csv est introuvable.")
+        return pd.DataFrame()
+
+# Function to recommend movies
+def recommend_movies(movie_title, df, knn_model, X_scaled):
+    """Recommend movies based on a given movie title."""
+    try:
+        # Find the index of the selected movie
         movie_index = df[df["title"] == movie_title].index[0]
+        
+        # Find the nearest neighbors
         _, indices = knn_model.kneighbors([X_scaled[movie_index]])
 
+        # Get indices of the recommended movies, excluding the first one (the movie itself)
         recommended_movies_index = indices[0][1:]
-       # Récupère les titres et URLs des affiches des films recommandés
+
+        # Retrieve titles and poster URLs of recommended movies
         recommendations = df.iloc[recommended_movies_index][['title', 'poster_path']]
         return recommendations
     except IndexError:
-        # Retourne une DataFrame vide si le film n'est pas trouvé dans le DataFrame
+        # Return an empty DataFrame if the movie is not found
         return pd.DataFrame(columns=['title', 'poster_path'])
 
-# Application Streamlit
+# Main application function
 def main():
-    # Section de recommandation
+    """Main function for the Streamlit app."""
+    # Set the title of the Streamlit app
     st.title("Système de recommandation de films")
 
-    # Chargement des données et préparation du modèle
+    # Load recommendation data
     df = load_recommendation_data()
-    columns_reco = df.columns[2:]  # Les colonnes de caractéristiques commencent à partir de la troisième colonne
+    
+    if df.empty:
+        st.error("Erreur: Les données de recommandation n'ont pas pu être chargées.")
+        return
+
+    # Ensure the data contains the necessary columns
+    if 'title' not in df.columns or len(df.columns) < 3:
+        st.error("Erreur: Le format des données de recommandation est incorrect.")
+        return
+
+    # Feature columns start from the third column
+    columns_reco = df.columns[2:]
     X = df[columns_reco]
 
-    # Standardisation des données
+    # Convert all data to numeric, handling non-numeric gracefully
+    X = X.apply(pd.to_numeric, errors='coerce')
+
+    # Handle missing values by filling them with the column mean
+    X.fillna(X.mean(), inplace=True)
+
+    # Standardize the features
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Création et entraînement du modèle k-NN
+    # Create and train the k-NN model
     knn_model = NearestNeighbors(n_neighbors=6, metric='cosine')
     knn_model.fit(X_scaled)
 
-    # Sélecteur de film
+    # Movie selection box
     movie_title = st.selectbox("Choisissez un film", df['title'])
 
+    # Button to trigger recommendations
     if st.button("Recommander"):
         recommendations = recommend_movies(movie_title, df, knn_model, X_scaled)
-        if not recommendations.empty:  # Vérifie si la série n'est pas vide
-            st.write("Recommandations pour le film ", movie_title, ":")
+        
+        if not recommendations.empty:
+            st.write(f"Recommandations pour le film '{movie_title}':")
             for _, row in recommendations.iterrows():
                 st.write(row['title'])
-                st.image(row['poster_path'], width=150)  # Affiche l'affiche du film
+                if pd.notna(row['poster_path']):
+                    st.image(row['poster_path'], width=150)
+                else:
+                    st.write("Pas d'affiche disponible.")
         else:
             st.write("Aucune recommandation trouvée pour ce film.")
-            
+        
 
     # Section d'analyse des acteurs
     st.title("Analyse des Acteurs")
