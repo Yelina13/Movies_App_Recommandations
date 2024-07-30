@@ -6,91 +6,91 @@ import matplotlib as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 
-# Function to load recommendation data
-@st.cache_data
+# Fonction pour charger les données de recommandation
+@st.cache
 def load_recommendation_data():
-    """Load the dataset for movie recommendations."""
+    """Charger le jeu de données pour les recommandations de films."""
     try:
-        return pd.read_csv("data.csv")  # Replace with the path to your file
+        return pd.read_csv("data.csv")  # Remplacez par le chemin vers votre fichier
     except FileNotFoundError:
-        st.error("Erreur: Le fichier data.csv est introuvable.")
+        st.error("Erreur : Le fichier data.csv est introuvable.")
         return pd.DataFrame()
 
-# Function to load actor analysis data
-@st.cache_data
+# Fonction pour charger les données d'analyse des acteurs
+@st.cache
 def load_analysis_data():
-    """Load the dataset for actor analysis."""
+    """Charger le jeu de données pour l'analyse des acteurs."""
     try:
         return pd.read_csv('movies_france_2000.csv', low_memory=False)
     except FileNotFoundError:
-        st.error("Erreur: Le fichier movies_france_2000.csv est introuvable.")
+        st.error("Erreur : Le fichier movies_france_2000.csv est introuvable.")
         return pd.DataFrame()
 
-# Function to recommend movies
+# Fonction de recommandation de films
 def recommend_movies(movie_title, df, knn_model, X_scaled):
-    """Recommend movies based on a given movie title."""
+    """Recommander des films basés sur le titre d'un film donné."""
     try:
-        # Find the index of the selected movie
+        # Trouver l'index du film sélectionné
         movie_index = df[df["title"] == movie_title].index[0]
         
-        # Find the nearest neighbors
+        # Trouver les voisins les plus proches
         _, indices = knn_model.kneighbors([X_scaled[movie_index]])
 
-        # Get indices of the recommended movies, excluding the first one (the movie itself)
+        # Obtenir les indices des films recommandés, en excluant le premier (le film lui-même)
         recommended_movies_index = indices[0][1:]
 
-        # Retrieve titles and poster URLs of recommended movies
+        # Récupérer les titres et les URLs des affiches des films recommandés
         recommendations = df.iloc[recommended_movies_index][['title', 'poster_path']]
         return recommendations
     except IndexError:
-        # Return an empty DataFrame if the movie is not found
+        # Retourner une DataFrame vide si le film n'est pas trouvé
         return pd.DataFrame(columns=['title', 'poster_path'])
 
-# Main application function
+# Fonction principale de l'application Streamlit
 def main():
-    """Main function for the Streamlit app."""
-    # Set the title of the Streamlit app
+    """Fonction principale pour l'application Streamlit."""
+    # Définir le titre de l'application Streamlit
     st.title("Système de recommandation de films")
 
-    # Load recommendation data
+    # Charger les données de recommandation
     df = load_recommendation_data()
     
     if df.empty:
-        st.error("Erreur: Les données de recommandation n'ont pas pu être chargées.")
+        st.error("Erreur : Les données de recommandation n'ont pas pu être chargées.")
         return
 
-    # Ensure the data contains the necessary columns
+    # Vérifier que les données contiennent les colonnes nécessaires
     if 'title' not in df.columns or len(df.columns) < 3:
-        st.error("Erreur: Le format des données de recommandation est incorrect.")
+        st.error("Erreur : Le format des données de recommandation est incorrect.")
         return
 
-    # Feature columns start from the third column
+    # Les colonnes de caractéristiques commencent à partir de la troisième colonne
     columns_reco = df.columns[2:]
     X = df[columns_reco]
 
-    # Convert all data to numeric, handling non-numeric gracefully
+    # Convertir toutes les données en numériques, en gérant les valeurs non numériques
     X = X.apply(pd.to_numeric, errors='coerce')
 
-    # Handle missing values by filling them with the column mean
+    # Gérer les valeurs manquantes en les remplissant avec la moyenne de la colonne
     X.fillna(X.mean(), inplace=True)
 
-    # Standardize the features
+    # Standardiser les caractéristiques
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Create and train the k-NN model
+    # Créer et entraîner le modèle k-NN
     knn_model = NearestNeighbors(n_neighbors=6, metric='cosine')
     knn_model.fit(X_scaled)
 
-    # Movie selection box
+    # Sélecteur de film
     movie_title = st.selectbox("Choisissez un film", df['title'])
 
-    # Button to trigger recommendations
+    # Bouton pour déclencher les recommandations
     if st.button("Recommander"):
         recommendations = recommend_movies(movie_title, df, knn_model, X_scaled)
         
         if not recommendations.empty:
-            st.write(f"Recommandations pour le film '{movie_title}':")
+            st.write(f"Recommandations pour le film '{movie_title}' :")
             for _, row in recommendations.iterrows():
                 st.write(row['title'])
                 if pd.notna(row['poster_path']):
