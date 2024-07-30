@@ -35,7 +35,7 @@ def recommend_movies(movie_title, df, knn_model, X_scaled):
         recommended_movies_index = indices[0][1:]
         recommendations = df.iloc[recommended_movies_index][['title', 'poster_path']]
         return recommendations
-    except IndexError:
+    except (IndexError, KeyError):
         return pd.DataFrame(columns=['title', 'poster_path'])
 
 # Fonction principale de l'application Streamlit
@@ -59,7 +59,6 @@ def main():
 
     # Nettoyage des données
     X = X.apply(pd.to_numeric, errors='coerce')
-    X.fillna(X.mean(), inplace=True)
     X.replace([float('inf'), -float('inf')], pd.NA, inplace=True)
     X.fillna(X.mean(), inplace=True)
 
@@ -119,8 +118,7 @@ def main():
     st.pyplot(fig1)
 
     # Répartition de l'âge par genre
-    df_actors = load_analysis_data()
-    df_actors['birthYear'] = pd.to_numeric(df_actors['birthYear'], errors='coerce')
+    df_actors = df_analysis.copy()
     df_actors['deathYear'] = pd.to_numeric(df_actors['deathYear'], errors='coerce')
     df_actors = df_actors.dropna(subset=['birthYear'])
     df_actors['age'] = df_actors.apply(lambda row: (row['deathYear'] if pd.notna(row['deathYear']) else 2024) - row['birthYear'], axis=1)
@@ -142,8 +140,7 @@ def main():
     st.pyplot(fig2)
 
     # Analyse des réalisateurs
-    df_directors = load_analysis_data()
-    df_directors = df_directors[df_directors['primaryProfession'].str.contains('director', na=False)].copy()
+    df_directors = df_analysis[df_analysis['primaryProfession'].str.contains('director', na=False)].copy()
     df_directors['averageRating'] = pd.to_numeric(df_directors['averageRating'], errors='coerce')
     df_directors['numVotes'] = pd.to_numeric(df_directors['numVotes'], errors='coerce')
     df_directors = df_directors.dropna(subset=['averageRating', 'numVotes'])
@@ -178,9 +175,8 @@ def main():
     st.pyplot(fig4)
 
     # Distribution des genres des acteurs
-    df_actors = load_analysis_data()
     genres = ['actor', 'actress']
-    df_actors = df_actors[df_actors['primaryProfession'].str.contains('|'.join(genres), na=False)]
+    df_actors = df_analysis[df_analysis['primaryProfession'].str.contains('|'.join(genres), na=False)]
     actor_count = df_actors['primaryProfession'].str.contains('actor', na=False) & ~df_actors['primaryProfession'].str.contains('actress', na=False)
     actress_count = df_actors['primaryProfession'].str.contains('actress', na=False)
     num_actors = actor_count.sum()
