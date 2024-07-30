@@ -13,7 +13,7 @@ def load_recommendation_data():
     try:
         return pd.read_csv("data1.csv")  # Remplacez par le chemin vers votre fichier
     except FileNotFoundError:
-        st.error("Erreur : Le fichier data.csv est introuvable. Vérifiez le chemin ou le nom du fichier.")
+        st.error("Erreur : Le fichier data1.csv est introuvable. Vérifiez le chemin ou le nom du fichier.")
         return pd.DataFrame()
 
 # Fonction pour charger les données d'analyse des acteurs
@@ -43,6 +43,7 @@ def recommend_movies(movie_title, df, knn_model, X_scaled):
         
         return recommendations
     except (IndexError, KeyError):
+        st.error("Erreur : Le titre du film est introuvable.")
         return pd.DataFrame(columns=['title', 'poster_urls'])
 
 # Fonction principale de l'application Streamlit
