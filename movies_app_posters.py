@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 
 # Fonction pour charger les données de recommandation
-@st.cache_data
+@st.cache  # Use the older caching decorator
 def load_recommendation_data():
     """Charger le jeu de données pour les recommandations de films."""
     try:
@@ -17,7 +17,7 @@ def load_recommendation_data():
         return pd.DataFrame()
 
 # Fonction pour charger les données d'analyse des acteurs
-@st.cache_data
+@st.cache  # Use the older caching decorator
 def load_analysis_data():
     """Charger le jeu de données pour l'analyse des acteurs."""
     try:
