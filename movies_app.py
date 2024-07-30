@@ -74,6 +74,12 @@ def main():
     # Gérer les valeurs manquantes en les remplissant avec la moyenne de la colonne
     X.fillna(X.mean(), inplace=True)
 
+    # Vérifier les valeurs infinies et les remplacer par des NaN
+    X.replace([float('inf'), -float('inf')], pd.NA, inplace=True)
+    
+    # Remplir les NaN restants avec la moyenne de la colonne
+    X.fillna(X.mean(), inplace=True)
+
     # Standardiser les caractéristiques
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
