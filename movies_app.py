@@ -23,10 +23,12 @@ def recommend_movies(movie_title, df, knn_model, X_scaled):
         _, indices = knn_model.kneighbors([X_scaled[movie_index]])
 
         recommended_movies_index = indices[0][1:]
-        recommendations = df["title"].iloc[recommended_movies_index]
+       # Récupère les titres et URLs des affiches des films recommandés
+        recommendations = df.iloc[recommended_movies_index][['title', 'poster_path']]
         return recommendations
     except IndexError:
-        return pd.Series()  # Retourne une série vide si l'indice est introuvable
+        # Retourne une DataFrame vide si le film n'est pas trouvé dans le DataFrame
+        return pd.DataFrame(columns=['title', 'poster_url'])
 
 # Application Streamlit
 def main():
@@ -53,8 +55,9 @@ def main():
         recommendations = recommend_movies(movie_title, df, knn_model, X_scaled)
         if not recommendations.empty:  # Vérifie si la série n'est pas vide
             st.write("Recommandations pour le film ", movie_title, ":")
-            for title in recommendations:
-                st.write(title)
+            for _, row in recommendations.iterrows():
+                st.write(row['title'])
+                st.image(row['poster_url'], width=150)  # Affiche l'affiche du film
         else:
             st.write("Aucune recommandation trouvée pour ce film.")
             
