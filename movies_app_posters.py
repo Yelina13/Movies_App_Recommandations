@@ -7,23 +7,23 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 
 # Fonction pour charger les données de recommandation
-@st.cache
+@st.cache_data
 def load_recommendation_data():
     """Charger le jeu de données pour les recommandations de films."""
     try:
         return pd.read_csv("data1.csv")  # Remplacez par le chemin vers votre fichier
     except FileNotFoundError:
-        st.error("Erreur : Le fichier data.csv est introuvable.")
+        st.error("Erreur : Le fichier data.csv est introuvable. Vérifiez le chemin ou le nom du fichier.")
         return pd.DataFrame()
 
 # Fonction pour charger les données d'analyse des acteurs
-@st.cache
+@st.cache_data
 def load_analysis_data():
     """Charger le jeu de données pour l'analyse des acteurs."""
     try:
         return pd.read_csv('movies_france_2000.csv', low_memory=False)
     except FileNotFoundError:
-        st.error("Erreur : Le fichier movies_france_2000.csv est introuvable.")
+        st.error("Erreur : Le fichier movies_france_2000.csv est introuvable. Vérifiez le chemin ou le nom du fichier.")
         return pd.DataFrame()
 
 # Fonction de recommandation de films
@@ -34,9 +34,16 @@ def recommend_movies(movie_title, df, knn_model, X_scaled):
         _, indices = knn_model.kneighbors([X_scaled[movie_index]])
         recommended_movies_index = indices[0][1:]
         recommendations = df.iloc[recommended_movies_index][['title', 'poster_path']]
+        
+        # Formatage des URLs des affiches
+        base_url = "https://image.tmdb.org/t/p/original/"
+        recommendations['poster_urls'] = recommendations['poster_path'].apply(
+            lambda path: base_url + path.lstrip('/') if path else "https://via.placeholder.com/300x450"
+        )
+        
         return recommendations
     except (IndexError, KeyError):
-        return pd.DataFrame(columns=['title', 'poster_path'])
+        return pd.DataFrame(columns=['title', 'poster_urls'])
 
 # Fonction principale de l'application Streamlit
 def main():
@@ -77,17 +84,15 @@ def main():
     movie_title = st.selectbox("Choisissez un film", df['title'])
 
     if st.button("Recommander"):
-        recommendations = recommend_movies(movie_title, df, knn_model, X_scaled)
+        with st.spinner("Chargement des recommandations..."):
+            recommendations = recommend_movies(movie_title, df, knn_model, X_scaled)
         if not recommendations.empty:
             st.write(f"Recommandations pour le film '{movie_title}' :")
             for _, row in recommendations.iterrows():
                 st.write(row['title'])
-                if pd.notna(row['poster_path']):
-                    st.image(row['poster_path'], width=150)
-                else:
-                    st.write("Pas d'affiche disponible.")
+                st.image(row['poster_urls'], width=150)
         else:
-            st.write("Aucune recommandation trouvée pour ce film.")
+            st.write("Aucune recommandation trouvée pour ce film. Essayez un autre titre.")
 
     # Section d'analyse des acteurs
     st.title("Analyse des Acteurs")
