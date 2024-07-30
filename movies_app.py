@@ -57,6 +57,7 @@ def main():
                 st.write(title)
         else:
             st.write("Aucune recommandation trouvée pour ce film.")
+            
 
     # Section d'analyse des acteurs
     st.title("Analyse des Acteurs")
