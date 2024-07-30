@@ -10,7 +10,10 @@ from sklearn.neighbors import NearestNeighbors
 def load_recommendation_data():
     """Charger le jeu de données pour les recommandations de films."""
     try:
-        return pd.read_csv("data1.csv")  # Remplacez par le chemin vers votre fichier
+        df = pd.read_csv("data1.csv")  # Remplacez par le chemin vers votre fichier
+        # Nettoyer les valeurs NaN dans la colonne 'poster_path'
+        df = df.dropna(subset=['poster_path'])
+        return df
     except FileNotFoundError:
         st.error("Erreur : Le fichier data1.csv est introuvable. Vérifiez le chemin ou le nom du fichier.")
         return pd.DataFrame()
