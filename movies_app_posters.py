@@ -1,4 +1,3 @@
-# Importer les bibliothèques nécessaires
 import streamlit as st
 import pandas as pd
 import seaborn as sns
@@ -7,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 
 # Fonction pour charger les données de recommandation
-@st.cache  # Use the older caching decorator
+@st.cache
 def load_recommendation_data():
     """Charger le jeu de données pour les recommandations de films."""
     try:
@@ -17,7 +16,7 @@ def load_recommendation_data():
         return pd.DataFrame()
 
 # Fonction pour charger les données d'analyse des acteurs
-@st.cache  # Use the older caching decorator
+@st.cache
 def load_analysis_data():
     """Charger le jeu de données pour l'analyse des acteurs."""
     try:
@@ -70,8 +69,9 @@ def main():
     X.replace([float('inf'), -float('inf')], pd.NA, inplace=True)
     X.fillna(X.mean(), inplace=True)
 
+    # Debug: Vérifier les NaN dans les données après nettoyage
     if X.isna().sum().sum() > 0:
-        st.error("Erreur : Les données contiennent encore des valeurs NaN après nettoyage.")
+        st.error(f"Erreur : Les données contiennent encore des valeurs NaN après nettoyage. Valeurs NaN restantes : {X.isna().sum().sum()}")
         return
 
     scaler = StandardScaler()
@@ -171,13 +171,13 @@ def main():
     director_count = df_directors['primaryName'].value_counts().reset_index()
     director_count.columns = ['primaryName', 'nombre_films']
     top_10_directors = director_count.head(10)
-
+    top_10_directors_df = df_directors[df_directors['primaryName'].isin(top_10_directors['primaryName'])]
     fig4, ax4 = plt.subplots(figsize=(12, 8))
-    ax4.barh(top_10_directors['primaryName'], top_10_directors['nombre_films'], color='lightblue')
-    ax4.set_xlabel('Nombre de films')
-    ax4.set_ylabel('Réalisateur')
-    ax4.set_title('Nombre de films par les 10 réalisateurs les plus prolifiques')
-    ax4.invert_yaxis()
+    sns.barplot(data=top_10_directors_df, x='primaryName', y='numVotes', order=top_10_directors['primaryName'], ax=ax4)
+    ax4.set_xticklabels(ax4.get_xticklabels(), rotation=45, ha='right')
+    ax4.set_xlabel('Réalisateur')
+    ax4.set_ylabel('Nombre de votes')
+    ax4.set_title('Nombre de films des 10 réalisateurs les plus prolifiques')
     st.pyplot(fig4)
 
     # Distribution des genres des acteurs
