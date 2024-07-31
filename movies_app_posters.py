@@ -31,28 +31,40 @@ def load_analysis_data():
 # Fonction pour obtenir l'URL de l'affiche du film
 def get_poster_path(movie_id, df):
     """Retourner l'URL de l'affiche du film basé sur l'ID du film."""
-    poster_path = df[df['title'] == movie_id]['poster_path'].values
+    poster_path = df[df['tconst'] == movie_id]['poster_path'].values
     if len(poster_path) > 0 and pd.notna(poster_path[0]):
         return "https://image.tmdb.org/t/p/original/" + poster_path[0].lstrip('/')
     else:
         return "https://via.placeholder.com/300x450"
 
+# # Fonction de recommandation de films
+# def recommend_movies(movie_title, df, knn_model, X_scaled):
+#     """Recommander des films basés sur le titre d'un film donné."""
+#     try:
+#         movie_index = df[df["title"] == movie_title].index[0]
+#         _, indices = knn_model.kneighbors([X_scaled[movie_index]])
+#         recommended_movies_index = indices[0][1:]
+#         recommendations = df.iloc[recommended_movies_index][['title', 'poster_path']]
+        
+#         # Formatage des URLs des affiches en utilisant la fonction get_poster_path
+#         recommendations['poster_urls'] = recommendations['title'].apply(lambda title: get_poster_path(title, df))
+        
+#         return recommendations
+#     except (IndexError, KeyError):
+#         st.error("Erreur : Le titre du film est introuvable.")
+#         return pd.DataFrame(columns=['title', 'poster_urls'])
+
+
 # Fonction de recommandation de films
-def recommend_movies(movie_title, df, knn_model, X_scaled):
-    """Recommander des films basés sur le titre d'un film donné."""
-    try:
-        movie_index = df[df["title"] == movie_title].index[0]
-        _, indices = knn_model.kneighbors([X_scaled[movie_index]])
-        recommended_movies_index = indices[0][1:]
-        recommendations = df.iloc[recommended_movies_index][['title', 'poster_path']]
-        
-        # Formatage des URLs des affiches en utilisant la fonction get_poster_path
-        recommendations['poster_urls'] = recommendations['title'].apply(lambda title: get_poster_path(title, df))
-        
-        return recommendations
-    except (IndexError, KeyError):
-        st.error("Erreur : Le titre du film est introuvable.")
-        return pd.DataFrame(columns=['title', 'poster_urls'])
+def recommend_movies(movie_title, df, X, model, n_recommendations):
+    movie_title_lower = movie_title.lower()
+    matches = df['primaryTitle'].str.lower() == movie_title_lower
+    movie_idx = df[df['primaryTitle'] == movie_title].index[0]
+    distances, indices = model.kneighbors(X.iloc[movie_idx, :].values.reshape(1, -1), n_neighbors=n_recommendations+1)
+    rec_movie_indices = indices.flatten()[1:]
+    return movie_title, df.iloc[rec_movie_indices]['tconst'].tolist()
+
+
 
 # Fonction principale de l'application Streamlit
 def main():
@@ -65,7 +77,7 @@ def main():
         st.error("Erreur : Les données de recommandation n'ont pas pu être chargées.")
         return
 
-    if 'title' not in df.columns or len(df.columns) < 3:
+    if 'primaryTitle' not in df.columns or len(df.columns) < 3:
         st.error("Erreur : Le format des données de recommandation est incorrect.")
         return
 
@@ -99,7 +111,7 @@ def main():
     knn_model.fit(X_scaled)
 
     # Sélecteur de film
-    movie_title = st.selectbox("Choisissez un film", df['title'])
+    movie_title = st.selectbox("Choisissez un film", df['primaryTitle'])
 
     if st.button("Recommander"):
         with st.spinner("Chargement des recommandations..."):
@@ -107,7 +119,7 @@ def main():
         if not recommendations.empty:
             st.write(f"Recommandations pour le film '{movie_title}' :")
             for _, row in recommendations.iterrows():
-                st.write(row['title'])
+                st.write(row['primaryTitle'])
                 st.image(row['poster_urls'], width=150)
         else:
             st.write("Aucune recommandation trouvée pour ce film. Essayez un autre titre.")
