@@ -15,13 +15,13 @@ logging.basicConfig(level=logging.DEBUG)
 sns.set(style="white", palette="pastel", font_scale=1.2)
 
 # Fonction pour charger les données de recommandation
-@st.cache_data  # Utiliser @st.cache_data pour les versions récentes de Streamlit
+@st.cache  # Utiliser @st.cache_data pour les versions récentes de Streamlit
 def load_recommendation_data() -> pd.DataFrame:
     logging.debug("Loading recommendation data...")
     return pd.read_csv("data.csv")  # Remplacez par le chemin de votre fichier
 
 # Fonction pour charger les données d'analyse des acteurs
-@st.cache_data
+@st.cache
 def load_analysis_data() -> pd.DataFrame:
     return pd.read_csv('movies_france_2000.csv', low_memory=False)
 
@@ -230,9 +230,6 @@ def create_graphs(df_analysis: pd.DataFrame):
      # Extraire les top 10 films les mieux notés
     top_rated_movies = df_analysis.nlargest(10, 'averageRating')[['title', 'averageRating', 'numVotes']]
 
-    # # Afficher le top 10 dans Streamlit
-    # st.write("Top 10 des films les mieux notés :")
-    # st.dataframe(top_rated_movies)
 
     # Centrer le titre avec Markdown
     st.markdown("<h5 style='text-align: center;'>Top 10 des films les mieux notés</h1>", unsafe_allow_html=True)
