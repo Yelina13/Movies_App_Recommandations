@@ -18,7 +18,7 @@ sns.set(style="white", palette="pastel", font_scale=1.2)
 @st.cache_data  # Utiliser @st.cache_data pour les versions récentes de Streamlit
 def load_recommendation_data() -> pd.DataFrame:
     logging.debug("Loading recommendation data...")
-    return pd.read_csv("data2.csv")  # Remplacez par le chemin de votre fichier
+    return pd.read_csv("data.csv")  # Remplacez par le chemin de votre fichier
 
 # Fonction pour charger les données d'analyse des acteurs
 @st.cache_data
