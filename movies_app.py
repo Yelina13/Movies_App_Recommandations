@@ -7,8 +7,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 
 # Fonction pour charger les données de recommandation
-@st.cache
-def load_recommendation_data():
+@st.cache_data
+def load_recommendation_data() -> pd.DataFrame:
+    """
+    Charge les données de recommandation à partir d'un fichier CSV.
+
+    Returns:
+        pd.DataFrame: Données de films
+    """
     return pd.read_csv("data1.csv")  # Remplacez par le chemin de votre fichier
 
 # # Fonction pour charger les données d'analyse des acteurs
@@ -17,8 +23,24 @@ def load_recommendation_data():
 #     return pd.read_csv('movies_france_2000.csv', low_memory=False)
 
 # Fonction de recommandation
-def recommend_movies(movie_title, df, knn_model, X_scaled):
+def recommend_movies(movie_title: str, df: pd.DataFrame, knn_model: NearestNeighbors, X_scaled) -> pd.Series:
+    """
+    Recommande des films similaires à un film donné.
+
+    Args:
+        movie_title (str): Le titre du film pour lequel générer des recommandations.
+        df (pd.DataFrame): Le DataFrame contenant les données des films.
+        knn_model (NearestNeighbors): Le modèle k-NN entraîné.
+        X_scaled (np.ndarray): Les caractéristiques normalisées des films.
+
+    Returns:
+        pd.Series: Série contenant les titres des films recommandés.
+    """
     try:
+        # Vérifie si le film est présent dans le DataFrame
+        if movie_title not in df["primaryTitle"].values:
+            return pd.Series()  # Retourne une série vide si le film n'est pas trouvé
+
         movie_index = df[df["primaryTitle"] == movie_title].index[0]
         _, indices = knn_model.kneighbors([X_scaled[movie_index]])
 
@@ -27,14 +49,22 @@ def recommend_movies(movie_title, df, knn_model, X_scaled):
         return recommendations
     except IndexError:
         return pd.Series()  # Retourne une série vide si l'indice est introuvable
-    
+
 # Pour afficher les images
-def get_poster_path(df, item_id):
+def get_poster_path(df: pd.DataFrame, item_id: str) -> str:
+    """
+    Récupère le chemin complet de l'affiche du film à partir d'un identifiant de film.
+
+    Args:
+        df (pd.DataFrame): Le DataFrame contenant les données des films.
+        item_id (str): L'identifiant du film.
+
+    Returns:
+        str: URL complète de l'image de l'affiche.
+    """
     poster_path = df[df['tconst'] == item_id]['poster_path'].values[0]
     full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
     return full_path
-
-
 
 # Application Streamlit
 def main():
@@ -63,7 +93,8 @@ def main():
             st.write("Recommandations pour le film ", movie_title, ":")
             for title in recommendations:
                 st.write(title)
-                st.image(get_poster_path(df['tconst']), width=150)
+                movie_id = df[df["primaryTitle"] == title]['tconst'].values[0]
+                st.image(get_poster_path(df, movie_id), width=150)
         else:
             st.write("Aucune recommandation trouvée pour ce film.")
 
