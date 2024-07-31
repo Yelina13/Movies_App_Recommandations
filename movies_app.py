@@ -5,9 +5,13 @@ import seaborn as sns
 import streamlit as st
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Fonction pour charger les données de recommandation
-@st.cache_data
+@st.cache_data  # Assuming you are using Streamlit 1.9 or later; otherwise use @st.cache
 def load_recommendation_data() -> pd.DataFrame:
     """
     Charge les données de recommandation à partir d'un fichier CSV.
@@ -15,12 +19,8 @@ def load_recommendation_data() -> pd.DataFrame:
     Returns:
         pd.DataFrame: Données de films
     """
+    logging.debug("Loading recommendation data...")
     return pd.read_csv("data1.csv")  # Remplacez par le chemin de votre fichier
-
-# # Fonction pour charger les données d'analyse des acteurs
-# @st.cache
-# def load_analysis_data():
-#     return pd.read_csv('movies_france_2000.csv', low_memory=False)
 
 # Fonction de recommandation
 def recommend_movies(movie_title: str, df: pd.DataFrame, knn_model: NearestNeighbors, X_scaled) -> pd.Series:
@@ -39,6 +39,7 @@ def recommend_movies(movie_title: str, df: pd.DataFrame, knn_model: NearestNeigh
     try:
         # Vérifie si le film est présent dans le DataFrame
         if movie_title not in df["primaryTitle"].values:
+            logging.warning(f"Movie title '{movie_title}' not found in the dataset.")
             return pd.Series()  # Retourne une série vide si le film n'est pas trouvé
 
         movie_index = df[df["primaryTitle"] == movie_title].index[0]
@@ -46,8 +47,10 @@ def recommend_movies(movie_title: str, df: pd.DataFrame, knn_model: NearestNeigh
 
         recommended_movies_index = indices[0][1:]
         recommendations = df["primaryTitle"].iloc[recommended_movies_index]
+        logging.info(f"Recommendations for '{movie_title}': {recommendations.tolist()}")
         return recommendations
     except IndexError:
+        logging.error(f"Index error for movie '{movie_title}'.")
         return pd.Series()  # Retourne une série vide si l'indice est introuvable
 
 # Pour afficher les images
@@ -62,9 +65,14 @@ def get_poster_path(df: pd.DataFrame, item_id: str) -> str:
     Returns:
         str: URL complète de l'image de l'affiche.
     """
-    poster_path = df[df['tconst'] == item_id]['poster_path'].values[0]
-    full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
-    return full_path
+    try:
+        poster_path = df[df['tconst'] == item_id]['poster_path'].values[0]
+        full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
+        logging.debug(f"Poster path for item '{item_id}': {full_path}")
+        return full_path
+    except IndexError:
+        logging.error(f"Poster path not found for item '{item_id}'.")
+        return ""
 
 # Application Streamlit
 def main():
@@ -94,9 +102,12 @@ def main():
             for title in recommendations:
                 st.write(title)
                 movie_id = df[df["primaryTitle"] == title]['tconst'].values[0]
-                st.image(get_poster_path(df, movie_id), width=150)
+                poster_url = get_poster_path(df, movie_id)
+                if poster_url:
+                    st.image(poster_url, width=150)
         else:
             st.write("Aucune recommandation trouvée pour ce film.")
+
 
     # # Section d'analyse des acteurs
     # st.title("Analyse des Acteurs")
