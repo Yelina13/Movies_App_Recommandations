@@ -28,11 +28,14 @@ def load_analysis_data():
         st.error("Erreur : Le fichier movies_france_2000.csv est introuvable. Vérifiez le chemin ou le nom du fichier.")
         return pd.DataFrame()
 
-# Fonction pour obtenir le chemin de l'affiche
-def get_poster_path(df, movie_id):
-    poster_path = df[df['tconst'] == movie_id]['poster_path'].values[0]
-    full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
-    return full_path
+# Fonction pour obtenir l'URL de l'affiche du film
+def get_poster_path(movie_id, df):
+    """Retourner l'URL de l'affiche du film basé sur l'ID du film."""
+    poster_path = df[df['title'] == movie_id]['poster_path'].values
+    if len(poster_path) > 0 and pd.notna(poster_path[0]):
+        return "https://image.tmdb.org/t/p/original/" + poster_path[0].lstrip('/')
+    else:
+        return "https://via.placeholder.com/300x450"
 
 # Fonction de recommandation de films
 def recommend_movies(movie_title, df, knn_model, X_scaled):
