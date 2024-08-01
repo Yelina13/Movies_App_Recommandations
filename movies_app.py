@@ -15,13 +15,13 @@ logging.basicConfig(level=logging.DEBUG)
 sns.set(style="white", palette="pastel", font_scale=1.2)
 
 # Fonction pour charger les données de recommandation
-@st.cache_resource  # Utiliser @st.cache_data pour les versions récentes de Streamlit
+@st.cache # Utiliser @st.cache_data pour les versions récentes de Streamlit
 def load_recommendation_data() -> pd.DataFrame:
     logging.debug("Loading recommendation data...")
     return pd.read_csv("data.csv")  # Remplacez par le chemin de votre fichier
 
 # Fonction pour charger les données d'analyse des acteurs
-@st.cache_resource
+@st.cache
 def load_analysis_data() -> pd.DataFrame:
     return pd.read_csv('movies_france_2000.csv', low_memory=False)
 
